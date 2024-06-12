@@ -1,24 +1,37 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
-import { AssetCode, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
-import path = require('path');
+import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as lambda from "aws-cdk-lib/aws-lambda-nodejs";
+import {
+  AssetCode,
+  FunctionUrlAuthType,
+  LayerVersion,
+  Runtime,
+} from "aws-cdk-lib/aws-lambda";
+import path = require("path");
+import { Bucket, BucketAccessControl } from "aws-cdk-lib/aws-s3";
+import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
+import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
+import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const lambdaPath = path.join(__dirname, '../../engine/src');
-    const wkhtmltopdfPath = path.join(__dirname, '../../engine/static/wkhtmltopdf');
+    // Lambda
 
+    const lambdaPath = path.join(__dirname, "../../engine/src");
+    const wkhtmltopdfPath = path.join(
+      __dirname,
+      "../../engine/static/wkhtmltopdf"
+    );
 
-    const lambdaFunction = new lambda.NodejsFunction(this, 'StockyardLambda', {
+    const lambdaFunction = new lambda.NodejsFunction(this, "StockyardLambda", {
       runtime: Runtime.NODEJS_18_X,
-      functionName: 'StockyardPDFLambda',
+      functionName: "StockyardPDFLambda",
       bundling: {
         commandHooks: {
           beforeBundling(inputDir: string, outputDir: string): string[] {
-            const staticSource = path.resolve(__dirname, '../../engine/static');
+            const staticSource = path.resolve(__dirname, "../../engine/static");
             return [`cp -r ${staticSource} ${outputDir}`];
           },
           afterBundling(inputDir: string, outputDir: string): string[] {
@@ -30,17 +43,41 @@ export class CdkStack extends cdk.Stack {
         },
       },
       entry: path.join(lambdaPath, `pdfGenerator.ts`),
-      handler: 'index.pdfGenerator',
-    })
-    const wkhtmltopdfLayer = new LayerVersion(this, 'WkhtmltopdfLayer', {
+      handler: "index.pdfGenerator",
+    });
+    const wkhtmltopdfLayer = new LayerVersion(this, "WkhtmltopdfLayer", {
       code: new AssetCode(wkhtmltopdfPath),
       compatibleRuntimes: [Runtime.NODEJS_18_X],
     });
     lambdaFunction.addLayers(wkhtmltopdfLayer);
     lambdaFunction.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
       cors: {
-        allowedOrigins: ['*'],
-      }
-    })
+        allowedOrigins: ["*"],
+      },
+    });
+
+    // Website
+    const bucket = new Bucket(this, "StockyardBucket", {
+      accessControl: BucketAccessControl.PRIVATE,
+    });
+
+    new BucketDeployment(this, "BucketDeployment", {
+      destinationBucket: bucket,
+      sources: [Source.asset(path.resolve(__dirname, "../../dist"))],
+    });
+
+    const originAccessIdentity = new OriginAccessIdentity(
+      this,
+      "OriginAccessIdentity"
+    );
+    bucket.grantRead(originAccessIdentity);
+
+    new Distribution(this, "Distribution", {
+      defaultRootObject: "index.html",
+      defaultBehavior: {
+        origin: new S3Origin(bucket, { originAccessIdentity }),
+      },
+    });
   }
 }
