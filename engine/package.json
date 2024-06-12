@@ -14,5 +14,9 @@
     "esbuild": "^0.21.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@types/csv-parse": "^1.2.2",
+    "csv-parse": "^5.5.6"
   }
 }
