@@ -1,4 +1,4 @@
-import { parse } from "csv-parse/.";
+import { parse } from "csv-parse";
 import busboy from "busboy";
 
 exports.module.pdfGenerator = async (event) => {

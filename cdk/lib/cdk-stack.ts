@@ -53,7 +53,7 @@ export class CdkStack extends cdk.Stack {
     lambdaFunction.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
       cors: {
-        allowedOrigins: ["https://d3nk8hhjj410hj.cloudfront.net/", "null"],
+        allowedOrigins: ["https://d3nk8hhjj410hj.cloudfront.net/", "*"],
       },
     });
 
