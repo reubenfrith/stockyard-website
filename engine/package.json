@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/busboy": "^1.5.4",
     "@types/node": "^20.14.2",
     "esbuild": "^0.21.5",
     "ts-node": "^10.9.2",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@types/csv-parse": "^1.2.2",
+    "busboy": "^1.6.0",
     "csv-parse": "^5.5.6"
   }
 }

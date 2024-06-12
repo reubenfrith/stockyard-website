@@ -38,7 +38,6 @@
             event.preventDefault();
 
             const csvFile = document.getElementById('csvFile').files[0];
-            console.log(csvFile);
             const month = document.getElementById('month').value;
 
             if (!csvFile || !month) {
@@ -46,27 +45,37 @@
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('csvFile', csvFile);
-            formData.append('month', month);
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const base64String = btoa(e.target.result);
+                const payload = {
+                    csvFile: base64String,
+                    month: month
+                };
 
-            try {
-                const response = await fetch('https://ah5h34wpggoli3zsckzjaxlsdu0scrsm.lambda-url.ap-southeast-2.on.aws/', {
-                    method: 'POST',
-                    body: formData,
-                });
+                try {
+                    const response = await fetch('https://ah5h34wpggoli3zsckzjaxlsdu0scrsm.lambda-url.ap-southeast-2.on.aws/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
 
-                console.log(response);
+                    console.log(response);
 
-                if (response.ok) {
-                    alert("File uploaded successfully!");
-                } else {
-                    alert("File upload failed!");
+                    if (response.ok) {
+                        alert("File uploaded successfully!");
+                    } else {
+                        alert("File upload failed!");
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert("An error occurred while uploading the file.");
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert("An error occurred while uploading the file.");
-            }
+            };
+
+            reader.readAsBinaryString(csvFile);
         });
     </script>
 </body>
