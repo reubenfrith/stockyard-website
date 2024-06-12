@@ -6,7 +6,7 @@ import { CdkStack } from "../lib/cdk-stack";
 const app = new cdk.App();
 new CdkStack(app, "CdkStack", {
   env: {
-    account: "128384115514",
-    region: "ap-southeast-2",
+    account: process.env.REUBEN_AWS_ACCOUNT_ID,
+    region: 'ap-southeast-2'
   },
 });
