@@ -3,3 +3,6 @@
 /cdk/node_modules
 /cdk/package-lock.json
 
+
+/engine/node_modules
+/engine/package-lock.json
