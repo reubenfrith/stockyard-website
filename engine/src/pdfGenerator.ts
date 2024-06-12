@@ -1,7 +1,7 @@
 import { parse } from "csv-parse";
 import busboy from "busboy";
 
-exports.module.pdfGenerator = async (event) => {
+module.exports.pdfGenerator = async (event) => {
     try {
         const base64String = event.body;
         const buffer = Buffer.from(base64String, 'base64');
