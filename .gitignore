@@ -3,6 +3,3 @@
 /cdk/node_modules
 /cdk/package-lock.json
 
-# Lambda
-/lambda/package-lock.json
-/lambda/node_modules
