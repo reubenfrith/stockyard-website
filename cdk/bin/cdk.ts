@@ -4,9 +4,8 @@ import * as cdk from "aws-cdk-lib";
 import { CdkStack } from "../lib/cdk-stack";
 
 const app = new cdk.App();
-new CdkStack(app, "CdkStack", {
+new CdkStack(app, "StockyardCdkStack", {
   env: {
-    account: process.env.REUBEN_AWS_ACCOUNT_ID,
     region: 'ap-southeast-2'
   },
 });

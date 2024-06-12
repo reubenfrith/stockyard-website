@@ -14,6 +14,7 @@ export class CdkStack extends cdk.Stack {
 
     const lambdaFunction = new lambda.NodejsFunction(this, 'StockyardLambda', {
       runtime: Runtime.NODEJS_18_X,
+      functionName: 'StockyardPDFLambda',
       bundling: {
         commandHooks: {
           beforeBundling(inputDir: string, outputDir: string): string[] {
