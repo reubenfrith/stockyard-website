@@ -3,7 +3,6 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import { AssetCode, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import path = require('path');
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -37,5 +36,10 @@ export class CdkStack extends cdk.Stack {
       compatibleRuntimes: [Runtime.NODEJS_18_X],
     });
     lambdaFunction.addLayers(wkhtmltopdfLayer);
+    lambdaFunction.addFunctionUrl({
+      cors: {
+        allowedOrigins: ['*'],
+      }
+    })
   }
 }
