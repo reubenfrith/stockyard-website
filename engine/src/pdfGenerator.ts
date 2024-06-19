@@ -1,82 +1,75 @@
-import { parse } from "csv-parse";
-import busboy from "busboy";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { createPDFRequestHandler } from "./generator/request-handler";
+import {
+  createZipFile,
+  getDataFromCSV,
+  separateByCategory,
+} from "./generator/utils";
+import { REGION_ID } from "./generator/config";
+import fs from "fs";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 module.exports.pdfGenerator = async (event) => {
-    try {
-        const base64String = event.body;
-        const buffer = Buffer.from(base64String, 'base64');
+  try {
+    const { parsedData, startDate, endDate } = await getDataFromCSV(event);
+    // seperate data based on category
+    // generate pdf for each category
+    // place all pdfs in a zip file
+    // upload zip file to s3
+    // return presigned url for the zip file
 
-        const result: any = await parseMultipartForm(buffer, event.headers['content-type']);
+    // generate unique file suffix
+    const fileSuffix = `${new Date().getTime()}`;
 
-        const csvFileContent = result.files['csvFile'];
-        const month = result.fields['month'];
+    //  separate data based on category
+    const categorizedData = separateByCategory(parsedData);
 
-        if (!csvFileContent || !month) {
-            throw new Error('CSV file or month not found in the request.');
-        }
+    for (const category in categorizedData) {
+      const fileName = `${category
+        .replace(/\s+/g, "_")
+        .replace(/[()]/g, "")}-${fileSuffix}.pdf`;
+      // generate pdf for each category
 
-        const parsedData = await parseCSV(csvFileContent);
-
-        console.log('Parsed CSV Data:', parsedData);
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'File processed successfully', data: parsedData }),
-        };
-    } catch (error) {
-        console.error('Error processing file:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Error processing file', error: error.message }),
-        };
+      await createPDFRequestHandler(categorizedData[category], fileName);
     }
+
+    const allCategories = Object.keys(categorizedData);
+    const fileNames = allCategories.map(
+      (category) =>
+        `${category
+          .replace(/\s+/g, "_")
+          .replace(/[()]/g, "")}-${fileSuffix}.pdf`
+    );
+    const zipFileName = `stockyard-${fileSuffix}.zip`;
+    // place all pdfs in a zip file
+
+    const zipFile = createZipFile(fileNames, zipFileName);
+    // upload zip file to s3
+    // return presigned url for the zip file
+
+    const client = new S3Client({ region: REGION_ID });
+    const command = new GetObjectCommand({
+      Bucket: "bucket",
+      Key: zipFileName,
+    });
+    const fileUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "File processed successfully",
+        fileUrl: fileUrl,
+      }),
+    };
+  } catch (error) {
+    console.error("Error processing file:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: "Error processing file",
+        error: error.message,
+      }),
+    };
+  }
 };
 
-function parseMultipartForm(buffer, contentType) {
-    return new Promise((resolve, reject) => {
-        const busboyObject = busboy({ headers: { 'content-type': contentType } });
-        const result = {
-            fields: {},
-            files: {}
-        };
-
-        busboyObject.on('field', (fieldname, val) => {
-            result.fields[fieldname] = val;
-        });
-
-        busboyObject.on('file', (fieldname, file) => {
-            let fileContent = '';
-            file.setEncoding('utf8');
-            file.on('data', (data) => {
-                fileContent += data;
-            });
-            file.on('end', () => {
-                result.files[fieldname] = fileContent;
-            });
-        });
-
-        busboyObject.on('finish', () => {
-            resolve(result);
-        });
-
-        busboyObject.on('error', (error) => {
-            reject(error);
-        });
-
-        busboyObject.end(buffer);
-    });
-}
-
-function parseCSV(csvString) {
-    return new Promise((resolve, reject) => {
-        parse(csvString, {
-            columns: true,
-            skip_empty_lines: true
-        }, (err, output) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(output);
-        });
-    });
-}

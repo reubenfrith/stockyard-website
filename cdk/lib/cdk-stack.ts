@@ -79,5 +79,20 @@ export class CdkStack extends cdk.Stack {
         origin: new S3Origin(bucket, { originAccessIdentity }),
       },
     });
+
+
+    // s3 Buckets pdfs and zips
+    const pdfBucket = new Bucket(this, "StockyardPDFBucket", {
+      accessControl: BucketAccessControl.PRIVATE,
+    });
+
+    const zipBucket = new Bucket(this, "StockyardZipBucket", {
+      accessControl: BucketAccessControl.PRIVATE,
+    });
+
+    // Lambda permissions
+    pdfBucket.grantReadWrite(lambdaFunction);
+    zipBucket.grantReadWrite(lambdaFunction);
+
   }
 }
