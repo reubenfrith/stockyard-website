@@ -3,7 +3,7 @@ import { pdfBuilder } from "./pdf-builder";
 import { registerPartials, registerHelpers } from "./register-hbs";
 import templateBuilder from "./template-builder";
 import ReadWriteStream from "stream";
-import uploadToTempBucket from "./upload-to-bucket";
+import uploadToPDFBucket from "./upload-to-bucket";
 
 const registerHbs = async () => {
   await registerPartials();
@@ -15,8 +15,9 @@ const createPDFRequestHandler = async (data, fileName): Promise<void> => {
 
   if (data) {
     await generatePdf(data, fileName);
+  } else {
+    throw new Error("No data found");
   }
-  const s3Uri = `s3://`;
 };
 
 const generatePdf = async (data, fileName) => {
@@ -25,7 +26,7 @@ const generatePdf = async (data, fileName) => {
     const pdfStream: ReadWriteStream = (await pdfBuilder(
       htmlTemplate
     )) as ReadWriteStream;
-    await uploadToTempBucket(pdfStream, fileName);
+    await uploadToPDFBucket(pdfStream, fileName);
     return;
   } catch (error) {
     throw error;
