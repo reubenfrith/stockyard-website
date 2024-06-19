@@ -83,10 +83,12 @@ export class CdkStack extends cdk.Stack {
 
     // s3 Buckets pdfs and zips
     const pdfBucket = new Bucket(this, "StockyardPDFBucket", {
+      bucketName: "stockyard-pdf-bucket",
       accessControl: BucketAccessControl.PRIVATE,
     });
 
     const zipBucket = new Bucket(this, "StockyardZipBucket", {
+      bucketName: "stockyard-zip-bucket",
       accessControl: BucketAccessControl.PRIVATE,
     });
 
