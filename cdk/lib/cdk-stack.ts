@@ -96,5 +96,13 @@ export class CdkStack extends cdk.Stack {
     pdfBucket.grantReadWrite(lambdaFunction);
     zipBucket.grantReadWrite(lambdaFunction);
 
+    // only store pdfs and zips in the respective buckets for 1 hour
+    pdfBucket.addLifecycleRule({
+      expiration: cdk.Duration.hours(1),
+    });
+    zipBucket.addLifecycleRule({
+      expiration: cdk.Duration.hours(1),
+    });
+
   }
 }
